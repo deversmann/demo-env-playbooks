@@ -1,0 +1,67 @@
+---
+- name: Install tower
+  hosts: tower.example
+  vars:
+    temp_dir: "/tmp/tower/"
+
+  tasks:
+    - name: Enable ansible repo
+      rhsm_repository:
+        name: rhel-7-server-ansible-2-rpms
+        state: enabled
+      become: yes
+
+    - name: Install ansible
+      package:
+        name: ansible
+        state: latest
+      become: yes
+
+    - name: Create temp directory
+      file:
+        path: "{{ temp_dir }}"
+        state: directory
+
+    - name: Download and extract tower
+      unarchive:
+        src: https://releases.ansible.com/ansible-tower/setup/ansible-tower-setup-latest.tar.gz
+        remote_src: yes
+        dest: "{{ temp_dir }}"
+        list_files: yes
+      register: extracted_files
+
+    - name: Update installation inventory - admin_password
+      lineinfile:
+        path: "{{ temp_dir }}{{ extracted_files.files.0 }}inventory"
+        regexp: '^admin_password='
+        line: "admin_password='admin'"
+
+    - name: Update installation inventory - pg_password
+      lineinfile:
+        path: "{{ temp_dir }}{{ extracted_files.files.0 }}inventory"
+        regexp: '^pg_password='
+        line: "pg_password='admin'"
+
+    - name: Update installation inventory - rabbitmq_password
+      lineinfile:
+        path: "{{ temp_dir }}{{ extracted_files.files.0 }}inventory"
+        regexp: '^rabbitmq_password='
+        line: "rabbitmq_password='admin'"
+
+    - name: Run installation
+      command: "sh {{ temp_dir }}{{ extracted_files.files.0 }}setup.sh"
+      become: yes
+
+    - name: Install employee license
+      uri:
+        url: https://localhost/api/v2/config/
+        method: POST
+        body: "{{ tower_license }}"
+        body_format: json
+        user: admin
+        password: admin
+        force_basic_auth: yes
+        validate_certs: no
+
+...
+

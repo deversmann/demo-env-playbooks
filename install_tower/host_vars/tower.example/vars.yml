@@ -1,0 +1,4 @@
+---
+tower_license: "{{ vault_tower_license }}"
+...
+
