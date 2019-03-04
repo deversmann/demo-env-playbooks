@@ -1,0 +1,32 @@
+---
+- name: Subscribe and update
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Subscribe to RHSM
+      redhat_subscription:
+        state: present
+        username: "{{ rhsm_username }}"
+        password: "{{ rhsm_password }}"
+        pool: "{{ rhsm_pool }}" 
+
+    - name: Disable all repos
+      rhsm_repository:
+        name: "*"
+        state: disabled
+
+    - name: Enable just rhel repo
+      rhsm_repository:
+        name: rhel-7-server-rpms
+        state: enabled
+
+    - name: Update packages
+      package:
+        name: "*"
+        state: latest
+
+    - name: Reboot
+      reboot:
+
+...

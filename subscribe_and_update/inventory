@@ -1,0 +1,9 @@
+tower.example
+
+[webservers]
+web01.example
+
+[dbservers]
+db01.example
+
+
